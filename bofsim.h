@@ -34,38 +34,12 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <exception>
 #include <string>
 
+#include "object.h"
+#include "log.h"
 
 typedef uint64_t address_t; // TODO make it 128 bit wide
 typedef uint64_t my_uint128_t; // TODO make it 128 bit wide
 typedef uint64_t cycle_t;
-
-
-class Log { // TODO move to log.h
-    // TODO add log levels
-public:
-    void info(int level, const std::string msg) { std::cout << msg << std::endl;}
-    void error(const std::string msg) { 
-        std::cout << msg << std::endl;
-        std::exception e; //(/*msg.c_str()*/);
-        throw e;
-    }
-};
-
-class SimObject: public Log { // TODO move to object.h
-private:
-    const std::string name;
-    SimObject(); // forbidden
-public:
-    SimObject(const std::string _name): name(_name) {
-        info(4, std::string("Creating object ") + name );
-    };
-//     SimObject(const char *_name): name(std::string(_name)) {
-//         info(4, std::string("Creating object ") + name );
-//     };
-    
-    const std::string& getName() {return this->name;};
-    
-};
 
 class Configuration { // TODO move to config.h
 public:

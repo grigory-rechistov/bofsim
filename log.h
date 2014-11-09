@@ -24,14 +24,22 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef LOG_H_
+#define LOG_H_
+
+#include <iostream>
 #include <string>
+#include <exception>
 
 class Log {
-    int log_level;
-    
+    // TODO add log levels
 public:
-    void Print(const std::string & msg);
-    
-}
+    void info(int level, const std::string msg) { std::cout << msg << std::endl;}
+    void error(const std::string msg) { 
+        std::cout << msg << std::endl;
+        std::exception e; // TODO invent something more fancy
+        throw e;
+    }
+};
 
-
+#endif // LOG_H_

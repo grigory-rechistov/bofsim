@@ -24,34 +24,26 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef MEMORY_H_
-#define MEMORY_H_
+#ifndef OBJECT_H_
+#define OBJECT_H_
 
-#include "object.h"
-#include "bofsim.h"
 #include "log.h"
 
-class MemoryIface {
+class SimObject: public Log { // TODO move to object.h
+private:
+    const std::string name;
+    SimObject(); // forbidden
 public:
-    virtual my_uint128_t Read(address_t addr) = 0;
-    virtual void Write(address_t addr, my_uint128_t val) = 0;
-};
-
-class Memory: public SimObject, public MemoryIface {
+    SimObject(const std::string _name): name(_name) {
+        info(4, std::string("Creating object ") + name );
+    };
+//     SimObject(const char *_name): name(std::string(_name)) {
+//         info(4, std::string("Creating object ") + name );
+//     };
     
-//     Memory() {}; // denied
-public:
-    Memory(const std::string _name): SimObject(_name) {};
-
-    virtual my_uint128_t Read(address_t addr) {
-        info(1, "Not implemented");
-        return 0;
-    }
-    
-    virtual void Write(address_t addr, my_uint128_t val) {
-        info(1, "Not implemented");
-    }
+    const std::string& getName() {return this->name;};
     
 };
 
-#endif // MEMORY_H_
+
+#endif // OBJECT_H_
