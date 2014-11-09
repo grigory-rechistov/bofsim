@@ -1,0 +1,209 @@
+SystemBrainFuck Specification
+Document version: 0.0.1 (initial)
+
+Author: 2014 Grigory Rechistov <grigory.rechistov@phystech.edu>
+
+Disclaimer
+
+This document is at its early stage of developement. It may change with further 
+versions breaking compatibility with previous at any moment. Nobody will hold any
+responsibilty for any harm caused to anyone or anything using this document.
+
+What it is
+
+SystemBrainFuck is a machine architecture specification for a CPU designed to 
+run brainfuck commands directly as machine instructions. 
+
+Its goals are:
+1. Define instruction set architecture that is both complies to brainfuck 
+specification and looks like a hardware machine at the same time.
+2. Close ambigious places (or at least make them explicitly configurable) in 
+the language spec and make it implementable.
+3. In the end, define enough details to be able to build a simulator to run 
+existing applications and run new ones that are able to use extended features of
+this specification.
+
+What it is not:
+1. Microarchitecture specification. No words about pipeline, caches etc. This
+document talks only about instruction-level things.
+
+Rationale
+Up to 128 bitness is added to make things funnier. Though one can limit this by 
+means of configuration registers before running things to maintain compatibility
+with software.
+
+Operating Modes
+
+* Halt Mode - no instructions are executed, no machine state is changed.
+* Application mode - regular brainfuck execution, with no memory mapped registers.
+* Supervisor mode - is entered upon any original specification violation by an
+application mode program, e.g., executing "]" without matching "[", 
+executing "<" with tape pointer set to 0 etc. The supervisor mode has certain 
+registers duplicated and it does have certain memory locations mapped to registers, 
+so that it can modify application register state before returning to the 
+application mode. If a program in supervisor mode violates the language 
+specification, the machine enters halt mode (this can be used as a legitimate 
+way to stop a calculation). If supervisor mode is disabled, then on violations 
+the processor transitions from application mode directly to halt mode.
+
+
+Register Set
+
+* PC - program counter, 128 bit wide unsigned. Unaccessible from application mode. 
+In supervisor mode, the application's PC is constant, mapped to address 1000, 
+while an new, active PC is also 128 bit and is not accessible by application.
+
+* SR - status register, 64 bit wide, unreadable from application mode, in supervisor
+mode is mapped to addres 1001. Its bitfields are described below:
+
+bit_range meaning 
+0-7       opcode of instruction that caused spec violation
+8-15      byte value of tape entry pointed bt TP at violation's time.
+16-23     processor mode. 0 - application mode, 1 - supervisor mode, 2 - halt mode.
+
+* TP - tape pointer, up to 128 bit unsigned. The width W of the register and memory 
+space can be varied from 10 to 128 through configuration register.
+Lower half-space (0; 2^(W-1)-1) is used by application mode; 
+upper half-space (2^(W-1); 2^W - 1) is for supervisor mode. It is a violation 
+to attempt to move TP outside application space while in application mode. 
+The supervisor mode's application can access the lower half; still, it is a 
+violation to attempt to move TP beyond zero or above 2^W - 1.
+
+* SP - stack pointer. Is used for handling "[" "]" cycles; it points to call stack
+entries. See "Call Stack" below. In application mode, it is not accessible; in
+supervisor mode, it is mapped to address 1002, and a separate copy, an active SP
+is used instead.
+
+* SK - skip depth unsigned 128 bit wide. In supervisor mode it is mapped 
+to address 1003, and a separate copy, an active SK is used instead.
+If not zero, then all instructions except "[" and "]" are treated as NOPs. 
+"[" increments SK by one, "]" decrements it by one.
+If it is zero, then no instructions except "[" may affect it. This counter is 
+needed to perform forward skip for "[" with failing condition, looking for 
+matching "]".
+
+Upon entering supervisor mode SK is always set to zero.
+
+
+Configuration registers
+
+These registers cannot be accessed by running program at all; they are 
+configured at calculation start and remain constant through it. They are introduced
+to provide means for compatibility with applications.
+
+Tape length (binary logarithm of its value to be precise ) is stored in the 
+register TL, its value can vary from 10 to 127.
+A special value of 9999 is used for compatibility with 
+the original brainfuck simulator.
+
+Tape's item width (in bits) is stored in the register TW. Its value must be 
+a multiple of 8, starting from 8 to 128.
+
+Number of processor modes is sored in register NM. 
+It can be either 2 (application and halt) or 3 (application, supervisor and halt).
+
+Stack depth is stored in register SD. Its value can be from 1 to 2^128-1. An 
+implementation must provide appropriate amount of host memory to hold the stack of 
+specified capacity.
+SD's values from 16 to 128 are expected to be typical for practical applications.
+
+Instruction memory capacity is stored in register IL. It can vary from 
+32 to 2^128 - 1. Note that implementations that provide supervisor mode have to
+store a separated space for supervisor program, i.e., allocate host memory of 
+twice the value of IL.
+
+Call Stack
+To store PC values for "[" commands participating in cycles a stack is used. If,
+at matching "]", the condition holds, PC is not incremented, instead its value is 
+popped from the top of this stack. Therefore, stack entries are 128 bit wide.
+
+It is a violation to attempt to execute either "[" or "]" when stack is full or 
+empty, correspondingly.
+
+TODO add possibility to inspect/adjust top of stack from supervisor mode for return
+  
+
+Tape Memory 
+
+The tape stores unsigned integers of TW bits wide (at least 8 bits). Its cells 
+are numbered by unsigned values and are referenced bt TP. 
+See TP description for details.
+
+Instruction Memory
+
+Memory space for commands is separated from tape memory. More to it, application
+mode instruction memory is not accessible from supervisor mode, and vice versa.
+Current memory space is indicated by processor mode in SR register.
+All instructions are 8 bits wide.
+If PC reaches end of current memory space, a violation is signalled. If PC is 
+attempted to be changed to a value below zero, a violation is signalled.
+
+Instructions
+
+All instructions are 8 bit wide, and PC points to current one. If not specified
+otherwise, after an execution  of current instruction completes, PC is incremented
+to point to the next in the 
+
+There are 8 commands in brainfuck. Therefore, there are 8 machine instructions
+in SystemBrainFuck that may change state other than PC. All remaining encodings
+are considered as NOPs - they only set PC = PC+1.
+
+If a processor is in a skipping mode ( SK != 0), then all instructions 
+except "[" and "]" are treated as NOPs.
+
+
+For 8 brainfuck commands, their encodings match their ASCII codes.
+
+>   Move the pointer to the right. TP = TP + 1 if no memory violation is 
+to happen; otherwise, signal violation.
+
+<   Move the pointer to the left; TP = TP -1 if no memory violation is 
+to happen; otherwise, signal violation.
+
++   Increment the memory cell under the pointer. 
+Overflow is allowed and is not considered a violation.
+
+-   Decrement the memory cell under the pointer. Underflow is allowed and is 
+not considered a violation.
+
+.   Output the character signified by the cell at the pointer. If the character
+cannot be represented as ASCII, then its hexadecimal value is printed (TODO 
+make this configurable by a register).
+
+,   Input a character and store it in the cell at the pointer. Only ASCII values 
+are accepted, all others are ignored (TODO make this configurable).
+
+[   Jump past the matching ] if the cell under the pointer is 0.
+if SK > 0, then SK = SK + 1;
+else If Tape[TP] != 0, 
+then enter skipping mode: SK = 1,
+else Stack[SP] = PC; SP = SP +1;
+
+]   Jump back to the matching [ if the cell under the pointer is nonzero.
+if SK > 0, then SK = SK - 1 
+else if Tape[TP] != 0;
+then PC = Stack[SP]; SP = SP -1;
+
+Returning from the Supervisor Mode
+
+Run "]" with supervisor SP = 0. This switches PC, SP, changes SR and puts 
+the processor into application mode.
+
+State after Reset
+
+The processor is in application mode, PC = 0, SP = 0, TP = 0, SR = 0, SK = 0.
+
+Tape memory, application instruction memory, supervisor instruction memory are 
+loaded through implementation-specific protocols.
+
+
+Loading Program Code and Data and Doing IO
+
+This specification does not detail how do instructions and data are loaded into.
+Neither it talks about IO details farther thatn it is 
+said in "." , "," descriptions.
+
+
+
+
+
