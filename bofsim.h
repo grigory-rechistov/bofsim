@@ -66,6 +66,7 @@ class BfCpu: public SimObject {
     SimObject &tape_mem;
     SimObject &application_mem;
     SimObject &supervisor_mem;
+    SimObject &iodev;
 
     /* Arch State */
     address_t pc;
@@ -92,12 +93,14 @@ public:
           const Configuration & cfg,
           SimObject & _tape_mem, 
           SimObject & _application_mem,
-          SimObject & _supervisor_mem
+          SimObject & _supervisor_mem,
+          SimObject & _io
          ): 
     SimObject(_name),
     tape_mem(_tape_mem),
     application_mem(_application_mem),
     supervisor_mem(_supervisor_mem),
+    iodev(_io),
     pc(0),
     inactive_pc(0),
     tp(0),

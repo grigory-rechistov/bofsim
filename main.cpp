@@ -26,6 +26,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "bofsim.h"
 #include "memory.h"
+#include "iodev.h"
 #include "optionparser.h"
 
 int main(int argc, char** argv) {
@@ -80,8 +81,12 @@ int main(int argc, char** argv) {
     Memory tape("tape");
     Memory amodeInstr("ainstr");
     Memory smodeInstr("sinstr");
-    BfCpu  cpu("cpu", cpuCfg, tape, amodeInstr, smodeInstr);
+    IODev  io("io");
+    BfCpu  cpu("cpu", cpuCfg, tape, amodeInstr, smodeInstr, io);
 
+    /* Load program */
+    
+    /* Simulate */
     for (cycle_t step = 0; step < steps; step++) {
         cpu.ExecuteOneStep();
     }

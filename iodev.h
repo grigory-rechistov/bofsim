@@ -46,7 +46,9 @@ public:
     IODev(const std::string _name): SimObject(_name) {};
 
     virtual my_uint128_t Read() {
-        return std::cin.operator>>();
+        my_uint128_t val;
+        std::cin >> val;
+        return val;
     }
     
     virtual void Write(my_uint128_t val) {
