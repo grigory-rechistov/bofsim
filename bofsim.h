@@ -27,26 +27,15 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef BOFSIM_H_
 #define BOFSIM_H_
 
-#include <cstdint>
 #include <vector>
 #include <iostream>
-#include <unordered_map>
 #include <exception>
 #include <string>
 
+#include "inttypes.h"
 #include "object.h"
 #include "log.h"
-
-typedef uint64_t address_t; // TODO make it 128 bit wide
-typedef uint64_t my_uint128_t; // TODO make it 128 bit wide
-typedef uint64_t cycle_t;
-
-class Configuration { // TODO move to config.h
-public:
-    std::unordered_map<std::string, my_uint128_t> cfg; // no point in hiding so far
-    auto Get(const std::string &key) const {return cfg.at(key);};
-    void Set(const std::string &key, my_uint128_t val){cfg[key] = val; };
-};
+#include "config.h"
 
 typedef enum {
     ApplicationMode = 0,

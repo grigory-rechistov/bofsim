@@ -24,41 +24,14 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef MEMORY_H_
-#define MEMORY_H_
+#ifndef INTTYPES_H_
+#define INTTYPES_H_
 
-#include <vector>
+#include <cstdint>
 
-#include "inttypes.h"
-#include "object.h"
-#include "bofsim.h"
-#include "log.h"
+typedef uint64_t address_t; // TODO make it 128 bit wide
+typedef uint64_t my_uint128_t; // TODO make it 128 bit wide
+typedef uint64_t cycle_t;
 
-class MemoryIface {
-public:
-    virtual my_uint128_t Read(address_t addr) = 0;
-    virtual void Write(address_t addr, my_uint128_t val) = 0;
-    virtual void LoadRaw(const char* buf, size_t len) = 0;
-};
+#endif // INTTYPES_H_
 
-class Memory: public SimObject, public MemoryIface {
-    
-    std::vector<char> data;
-public:
-    Memory(const std::string _name): SimObject(_name) {};
-
-    virtual my_uint128_t Read(address_t addr) {
-        info(1, "Not implemented");
-        return 0;
-    }
-    
-    virtual void Write(address_t addr, my_uint128_t val) {
-        info(1, "Not implemented");
-    }
-    
-    virtual void LoadRaw(const char* buf, size_t len) {
-        info(1, "Not implemented");
-    }
-};
-
-#endif // MEMORY_H_

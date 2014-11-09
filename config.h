@@ -24,41 +24,19 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef MEMORY_H_
-#define MEMORY_H_
+#ifndef CONFIG_H_
+#define CONFIG_H_
 
-#include <vector>
+#include <unordered_map>
+#include <string>
 
 #include "inttypes.h"
-#include "object.h"
-#include "bofsim.h"
-#include "log.h"
 
-class MemoryIface {
+class Configuration { // TODO move to config.h
 public:
-    virtual my_uint128_t Read(address_t addr) = 0;
-    virtual void Write(address_t addr, my_uint128_t val) = 0;
-    virtual void LoadRaw(const char* buf, size_t len) = 0;
+    std::unordered_map<std::string, my_uint128_t> cfg; // no point in hiding so far
+    auto Get(const std::string &key) const {return cfg.at(key);};
+    void Set(const std::string &key, my_uint128_t val){cfg[key] = val; };
 };
 
-class Memory: public SimObject, public MemoryIface {
-    
-    std::vector<char> data;
-public:
-    Memory(const std::string _name): SimObject(_name) {};
-
-    virtual my_uint128_t Read(address_t addr) {
-        info(1, "Not implemented");
-        return 0;
-    }
-    
-    virtual void Write(address_t addr, my_uint128_t val) {
-        info(1, "Not implemented");
-    }
-    
-    virtual void LoadRaw(const char* buf, size_t len) {
-        info(1, "Not implemented");
-    }
-};
-
-#endif // MEMORY_H_
+#endif // CONFIG_H_
