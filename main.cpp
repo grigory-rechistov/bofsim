@@ -26,11 +26,50 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "bofsim.h"
 #include "memory.h"
+#include "optionparser.h"
 
 int main(int argc, char** argv) {
+    cycle_t steps = 1;
     
-    Configuration CpuCfg;
-    CpuCfg.cfg = { {"tl", 9999},
+    /* Parse command line options */
+    enum  optionIndex {UNKNOWN, HELP, STEPS};
+    const option::Descriptor usage[] = {
+        {UNKNOWN, 0, "" , ""     , option::Arg::None, "Usage: bofsim [--help] [--steps=steps] \n\n"
+                                                      "Options:" },
+        {HELP,    0, "h", "help" , option::Arg::None, "  --help      Print usage and exit." },
+        {STEPS,   0, "s", "steps", option::Arg::Optional, "  --steps, -s Exit after specified simulation steps." },
+        {0,0,0,0,0,0}
+    };
+
+    argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
+    option::Stats  stats(usage, argc, argv);
+    option::Option options[stats.options_max], buffer[stats.buffer_max];
+    option::Parser parse(usage, argc, argv, options, buffer);
+
+    if (parse.error())
+        return 1;
+    if (options[UNKNOWN]) {
+        std::cerr << "Unknown option: " << options[UNKNOWN].name << std::endl;
+        option::printUsage(std::cout, usage);
+        return 1;
+    }
+    if (options[HELP]) {
+        option::printUsage(std::cout, usage);
+        return 0;
+    }
+    if (options[STEPS]) {
+        if (!options[STEPS].arg) {
+            std::cerr << "Number of steps cannot be zero or empty.\n";
+            option::printUsage(std::cout, usage);
+            return 1;
+        }
+//         std::cout << options[STEPS].arg << "\n";
+        steps = std::stoi(options[STEPS].arg);
+    }
+    
+    /* Prepare architectural configuration */
+    Configuration cpuCfg;
+    cpuCfg.cfg = { {"tl", 9999},
                    {"tw", 8},
                    {"nm", 3},
                    {"sd", 16},
@@ -38,11 +77,15 @@ int main(int argc, char** argv) {
     };
     
     /* Add Objects */
-    Memory Tape("tape");
-    Memory AmodeInstr("ainstr");
-    Memory SmodeInstr("sinstr");
-    
+    Memory tape("tape");
+    Memory amodeInstr("ainstr");
+    Memory smodeInstr("sinstr");
+    BfCpu  cpu("cpu", cpuCfg, tape, amodeInstr, smodeInstr);
 
+    for (cycle_t step = 0; step < steps; step++) {
+        cpu.ExecuteOneStep();
+    }
+    
     return 0;
 }
 

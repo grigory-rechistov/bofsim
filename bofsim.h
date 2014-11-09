@@ -34,6 +34,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <exception>
 #include <string>
 
+
 typedef uint64_t address_t; // TODO make it 128 bit wide
 typedef uint64_t my_uint128_t; // TODO make it 128 bit wide
 typedef uint64_t cycle_t;
@@ -45,7 +46,7 @@ public:
     void info(int level, const std::string msg) { std::cout << msg << std::endl;}
     void error(const std::string msg) { 
         std::cout << msg << std::endl;
-        std::exception e(/*msg.c_str()*/);
+        std::exception e; //(/*msg.c_str()*/);
         throw e;
     }
 };
@@ -62,7 +63,7 @@ public:
 //         info(4, std::string("Creating object ") + name );
 //     };
     
-    const std::string & getName() {return this->name;};
+    const std::string& getName() {return this->name;};
     
 };
 
@@ -143,7 +144,7 @@ public:
     sk(0)
     {
         tl = cfg.Get("tl");
-        if (tl != 9999 || tl < 10 || tl > 127)
+        if ((tl < 10 || tl > 127) && tl != 9999)
             error("Bad TL value in configuration");
         if (tl != 9999)
             tl = (my_uint128_t)1 << tl;
@@ -151,7 +152,7 @@ public:
         if (tw < 8 || tw > 128 || (tw & 0x7))
             error("Bad TW value in configuration");
         nm = cfg.Get("nm");
-        if (nm != 2 || nm != 3)
+        if (nm != 2 && nm != 3)
             error("Bad NM value in configuration");
         sd = cfg.Get("sd");
         if (sd == 0)
