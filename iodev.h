@@ -28,6 +28,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define IODEV_H_
 
 #include <iostream>
+#include <vector>
 
 #include "inttypes.h"
 #include "object.h"

@@ -1,6 +1,9 @@
+.FORCE: test
 
-test: test01
+test: test-io
 
 test01:
 	echo "not done"
+	
+test-io:
 	
