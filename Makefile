@@ -10,6 +10,8 @@ all: bofsim
 clean: 
 	rm -rf bofsim *.o
 
+*.o : *.h # This rule is lame, but better than nothing
+
 bofsim: main.o bofsim.o memory.o
 
 test:
