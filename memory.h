@@ -57,7 +57,7 @@ public:
     }
     
     virtual void LoadRaw(const char* buf, size_t len) {
-        info(1, "Not implemented");
+        data.assign(len, *buf);
     }
 };
 
