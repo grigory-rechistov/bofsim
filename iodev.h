@@ -28,7 +28,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define IODEV_H_
 
 #include <iostream>
-#include <vector>
+#include <fstream>
 
 #include "inttypes.h"
 #include "object.h"
@@ -41,21 +41,44 @@ public:
 };
 
 class IODev: public SimObject, public IOIface {
+    std::ifstream fcin;
+    std::ofstream fcout;
+    std::istream &cin;
+    std::ostream &cout;
     
-    std::vector<char> data;
 public:
-    IODev(const std::string _name): SimObject(_name) {};
+    IODev(const std::string _name): 
+        SimObject(_name),
+        fcin(),
+        fcout(),
+        cin(std::cin),
+        cout(std::cout)
+        {};
+    IODev(const std::string _name,
+          const std::string _inname,
+          const std::string _outname
+    ): SimObject(_name),
+       fcin(_inname),
+       fcout(_outname, std::ios::out | std::ios::trunc),
+       cin(fcin),
+       cout(fcout)
+       {};
 
+    virtual ~IODev() {
+        if (fcin.is_open())  fcin.close();
+        if (fcout.is_open()) fcout.close();
+    }
+        
     virtual my_uint128_t Read() {
-        my_uint128_t val;
-        std::cin >> val;
+        char val;
+        cin.get(val);
         return val;
     }
     
     virtual void Write(my_uint128_t val) {
         // TODO parsametrize this to output either ASCII or hex or dec etc
         char v = static_cast<char>(val);
-        std::cout << v;
+        cout << v;
     }    
 };
 
