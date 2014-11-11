@@ -62,7 +62,7 @@ bit_range meaning
 16-23     processor mode. 0 - application mode, 1 - supervisor mode, 2 - halt mode.
 
 * TP - tape pointer, up to 128 bit unsigned. The width W of the register and memory 
-space can be varied from 10 to 128 through configuration register.
+space can be varied from 10 to 128 through configuration register TL (see below).
 Lower half-space (0; 2^(W-1)-1) is used by application mode; 
 upper half-space (2^(W-1); 2^W - 1) is for supervisor mode. It is a violation 
 to attempt to move TP outside application space while in application mode. 
@@ -91,22 +91,27 @@ These registers cannot be accessed by running program at all; they are
 configured at calculation start and remain constant through it. They are introduced
 to provide means for compatibility with applications.
 
+TL
 Tape length (binary logarithm of its value to be precise ) is stored in the 
 register TL, its value can vary from 10 to 127.
 A special value of 9999 is used for compatibility with 
 the original brainfuck simulator.
 
+TW
 Tape's item width (in bits) is stored in the register TW. Its value must be 
 a multiple of 8, starting from 8 to 128.
 
+NM
 Number of processor modes is sored in register NM. 
 It can be either 2 (application and halt) or 3 (application, supervisor and halt).
 
+SD
 Stack depth is stored in register SD. Its value can be from 1 to 2^128-1. An 
 implementation must provide appropriate amount of host memory to hold the stack of 
 specified capacity.
 SD's values from 16 to 128 are expected to be typical for practical applications.
 
+IL
 Instruction memory capacity is stored in register IL. It can vary from 
 32 to 2^128 - 1. Note that implementations that provide supervisor mode have to
 store a separated space for supervisor program, i.e., allocate host memory of 
@@ -121,7 +126,6 @@ It is a violation to attempt to execute either "[" or "]" when stack is full or
 empty, correspondingly.
 
 TODO add possibility to inspect/adjust top of stack from supervisor mode for return
-  
 
 Tape Memory 
 

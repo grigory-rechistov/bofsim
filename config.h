@@ -32,7 +32,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "inttypes.h"
 
-class Configuration { // TODO move to config.h
+class Configuration {
 public:
     std::unordered_map<std::string, my_uint128_t> cfg; // no point in hiding so far
     auto Get(const std::string &key) const {return cfg.at(key);};

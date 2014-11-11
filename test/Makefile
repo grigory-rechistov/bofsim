@@ -1,5 +1,5 @@
-CFLAGS=-std=c11 -Wall -Wfatal-errors -Werror -g -I ..
-CXXFLAGS=-std=c++11 -Wall -Wfatal-errors -Werror -g -I ..
+CFLAGS=-std=c11 -Wall -Wfatal-errors -Werror  -I ..
+CXXFLAGS=-std=c++11 -Wall -Wfatal-errors -Werror  -I .. -std=c++1y # http://stackoverflow.com/questions/21258062/warning-with-automatic-return-type-deduction-why-do-we-need-decltype-when-retur
 SUFF=.exe # Yes, even for Linux
 
 ifeq ($(OS), Windows_NT) # Windows
@@ -11,7 +11,8 @@ CXX = g++-4.8
 endif
 
 ENABLED_TESTS = \
-        test-io$(SUFF)
+        test-io$(SUFF) \
+        test-mem$(SUFF)
 
 #
 
@@ -25,7 +26,7 @@ all: $(ENABLED_TESTS)
 
 *.cpp: ../*.h expect.h
 
-test-io$(SUFF): test-io.cpp
+test-%$(SUFF): test-%.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 

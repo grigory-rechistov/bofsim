@@ -41,19 +41,32 @@ public:
     virtual void LoadRaw(const char* buf, size_t len) = 0;
 };
 
+// The memory device represent an unbounded array of addressable cells
+// Host memory is allocated lazily (not done currently)
+/* TODO current implementation does not handle large memory sizes */
 class Memory: public SimObject, public MemoryIface {
     
     std::vector<char> data;
+    
+    /* Assure we have the backing store */
+    inline void get_page(address_t addr) {
+        if (data.size() <= addr) {
+            size_t new_size = addr+1; // TODO use LZCNT algo here to allocate nearest power of two
+            data.resize(new_size);
+        }
+    }
 public:
     Memory(const std::string _name): SimObject(_name) {};
 
     virtual my_uint128_t Read(address_t addr) {
-        info(1, "Not implemented");
-        return 0;
+        if (data.size() <= addr) // Need not allocate storage for uninitialized ranges
+            return 0;
+        return data.at(addr);
     }
     
     virtual void Write(address_t addr, my_uint128_t val) {
-        info(1, "Not implemented");
+        get_page(addr);
+        data.at(addr) = (char)val;
     }
     
     virtual void LoadRaw(const char* buf, size_t len) {
