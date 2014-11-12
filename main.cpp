@@ -240,7 +240,7 @@ int main(int argc, char** argv) {
             delete[] buf;
         }
         tape_stream.close();
-        std::cerr << "Scode:\n" << tape.Dump() << std::endl;
+        std::cerr << "Tape:\n" << tape.Dump() << std::endl;
     }
     /* Simulate */
     for (cycle_t step = 0; step < r.steps; step++) {
