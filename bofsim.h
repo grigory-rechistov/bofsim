@@ -63,9 +63,9 @@ struct status_register_t {
 
 class BfCpu: public SimObject {
     
-    SimObject &tape_mem;
-    SimObject &application_mem;
-    SimObject &supervisor_mem;
+    SimObject &tape;
+    SimObject &acode;
+    SimObject &scode;
     SimObject &iodev;
 
     /* Arch State */
@@ -91,15 +91,15 @@ class BfCpu: public SimObject {
 public:
     BfCpu(const std::string & _name,
           const Configuration & cfg,
-          SimObject & _tape_mem, 
-          SimObject & _application_mem,
-          SimObject & _supervisor_mem,
+          SimObject & _tape, 
+          SimObject & _acode,
+          SimObject & _scode,
           SimObject & _io
          ): 
     SimObject(_name),
-    tape_mem(_tape_mem),
-    application_mem(_application_mem),
-    supervisor_mem(_supervisor_mem),
+    tape(_tape),
+    acode(_acode),
+    scode(_scode),
     iodev(_io),
     pc(0),
     inactive_pc(0),
@@ -129,9 +129,17 @@ public:
         call_stack.resize(this->sd);
     }
     
-    cycle_t ExecuteOneStep();
+    /* RETURN: [steps, cycles] actually done 
+     * [1, 1] - all ok,
+     * [1, >1] - ok, but a long instruction encountered
+     * [0, 1] - processor disabled
+     * [0, >1] - unused currently
+     */
+    steps_cycles_t ExecuteOneStep();
     
-    cycle_t Execute(cycle_t max_cycles);
+    /* IN: maximum steps to do 
+       RETURN: [steps, cycles] actually done */
+    steps_cycles_t Execute(step_t max_steps);
     
 }; //BfCpu
 

@@ -36,8 +36,10 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "bofsim.h"
 #include "log.h"
 
-class MemoryIface {
+class MemoryIface/*: public SimObject*/ {
 public:
+//     MemoryIface() = delete;
+//     MemoryIface(const std::string _name): SimObject(_name) {}; 
     virtual my_uint128_t Read(address_t addr) = 0;
     virtual void Write(address_t addr, my_uint128_t val) = 0;
     virtual void LoadRaw(const char* buf, size_t len) = 0;
@@ -47,7 +49,7 @@ public:
 // The memory device represent an unbounded array of addressable cells
 // Host memory is allocated lazily (not done currently)
 /* TODO current implementation does not handle large memory sizes */
-class Memory: public SimObject, public MemoryIface {
+class Memory: public MemoryIface, public SimObject {
     
     std::vector<char> data;
     
@@ -59,6 +61,7 @@ class Memory: public SimObject, public MemoryIface {
         }
     }
 public:
+    Memory() = delete;
     Memory(const std::string _name): SimObject(_name) {};
 
     virtual my_uint128_t Read(address_t addr) {

@@ -28,10 +28,13 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INTTYPES_H_
 
 #include <cstdint>
+#include <utility>
 
 typedef uint64_t address_t; // TODO make it 128 bit wide
 typedef uint64_t my_uint128_t; // TODO make it 128 bit wide
 typedef uint64_t cycle_t;
+typedef uint64_t step_t;
+typedef std::pair<step_t, cycle_t> steps_cycles_t;
 
 #endif // INTTYPES_H_
 

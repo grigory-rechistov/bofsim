@@ -26,7 +26,6 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
 #include <cassert>
-// #include <cstdio>
 
 #include "bofsim.h"
 #include "memory.h"
@@ -34,7 +33,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "optionparser.h"
 
 typedef struct cli_options {
-    cycle_t steps = 1;
+    step_t steps = 1;
     const char *scode_file;
     const char *acode_file;
     const char *tape_file;    
@@ -243,7 +242,7 @@ int main(int argc, char** argv) {
         std::cerr << "Tape:\n" << tape.Dump() << std::endl;
     }
     /* Simulate */
-    for (cycle_t step = 0; step < r.steps; step++) {
+    for (step_t step = 0; step < r.steps; step++) {
         cpu.ExecuteOneStep();
     }
     

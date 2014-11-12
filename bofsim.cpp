@@ -26,16 +26,49 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include "bofsim.h"
+#include "memory.h"
 
-cycle_t BfCpu::Execute(cycle_t max_cycles) {
+steps_cycles_t BfCpu::Execute(cycle_t max_cycles) {
     cycle_t i = 0;
     for (i = 0; i < max_cycles; i++)
         ExecuteOneStep();
-    return max_cycles;
+    return {max_cycles, max_cycles};
 }
 
-cycle_t BfCpu::ExecuteOneStep() {
-    this->info(1, "ExecuteOneStep: not implemented");
-    return 1;
-}
+steps_cycles_t BfCpu::ExecuteOneStep() {
+    
+    if (sr.mode == HaltMode) {// processor is disabled
+        info(4, "CPU is disabled");
+        return {0,1};
+    }
+    
+    char opcode{0};
+    /* Fetch */
+    switch (sr.mode) {
+    case ApplicationMode:
+        opcode = dynamic_cast<MemoryIface&>(acode).Read(pc);
+        break;
+    case SupervisorMode:
+        opcode = dynamic_cast<MemoryIface&>(scode).Read(pc);
+        break;
+    default:
+        error("Unsupported processor mode");
+        break;
+    }
+        
+    
+    /* Decode and Execute */
+    info(4, std::string("Opcode read ") + std::string(1, opcode));
+    switch (opcode) {
+    case '\0':
+        break;
+    default:
+        break;
+    }
+    pc +=1;
+    
+    /* Advance PC */
+    
+    return {1,1};
+} // ExecuteOneStep
     

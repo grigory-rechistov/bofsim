@@ -29,19 +29,18 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "log.h"
 
-class SimObject: public Log { // TODO move to object.h
+class SimObject: public Log {
 private:
     const std::string name;
-    SimObject(); // forbidden
 public:
+    SimObject() = delete;
     SimObject(const std::string _name): name(_name) {
         info(4, std::string("Creating object ") + name );
     };
-//     SimObject(const char *_name): name(std::string(_name)) {
-//         info(4, std::string("Creating object ") + name );
-//     };
     
-    const std::string& getName() {return this->name;};
+    virtual ~SimObject() {}; // this makes this class virtual
+    
+//     const std::string& getName() {return this->name;};
     
 };
 
