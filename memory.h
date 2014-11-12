@@ -28,6 +28,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MEMORY_H_
 
 #include <vector>
+#include <cassert>
+#include <cstring>
 
 #include "inttypes.h"
 #include "object.h"
@@ -39,6 +41,7 @@ public:
     virtual my_uint128_t Read(address_t addr) = 0;
     virtual void Write(address_t addr, my_uint128_t val) = 0;
     virtual void LoadRaw(const char* buf, size_t len) = 0;
+    virtual const char* Dump() const = 0;
 };
 
 // The memory device represent an unbounded array of addressable cells
@@ -65,12 +68,19 @@ public:
     }
     
     virtual void Write(address_t addr, my_uint128_t val) {
-        get_page(addr);
+        get_page(addr); // lazily allocate storage
         data.at(addr) = (char)val;
     }
     
     virtual void LoadRaw(const char* buf, size_t len) {
-        data.assign(len, *buf);
+        if (len > data.size()) {
+            data.resize(len);
+        }
+        memcpy(data.data(), buf, len);
+    }
+    
+    virtual const char* Dump() const {
+        return data.data();
     }
 };
 

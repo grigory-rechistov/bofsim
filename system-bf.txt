@@ -69,12 +69,12 @@ to attempt to move TP outside application space while in application mode.
 The supervisor mode's application can access the lower half; still, it is a 
 violation to attempt to move TP beyond zero or above 2^W - 1.
 
-* SP - stack pointer. Is used for handling "[" "]" cycles; it points to call stack
+* SP - stack pointer, signed integer. Is used for handling "[" "]" cycles; it points to call stack
 entries. See "Call Stack" below. In application mode, it is not accessible; in
 supervisor mode, it is mapped to address 1002, and a separate copy, an active SP
 is used instead.
 
-* SK - skip depth unsigned 128 bit wide. In supervisor mode it is mapped 
+* SK - skip depth, unsigned 128 bit wide. In supervisor mode it is mapped 
 to address 1003, and a separate copy, an active SK is used instead.
 If not zero, then all instructions except "[" and "]" are treated as NOPs. 
 "[" increments SK by one, "]" decrements it by one.
@@ -95,7 +95,7 @@ TL
 Tape length (binary logarithm of its value to be precise ) is stored in the 
 register TL, its value can vary from 10 to 127.
 A special value of 9999 is used for compatibility with 
-the original brainfuck simulator.
+the original brainfuck simulator and denotes tape length of exactly 9999.
 
 TW
 Tape's item width (in bits) is stored in the register TW. Its value must be 
@@ -145,16 +145,24 @@ attempted to be changed to a value below zero, a violation is signalled.
 Instructions
 
 All instructions are 8 bit wide, and PC points to current one. If not specified
-otherwise, after an execution  of current instruction completes, PC is incremented
-to point to the next in the 
+otherwise, after an execution of current instruction completes, PC is incremented
+to point to the next one in the instruction memory.
 
 There are 8 commands in brainfuck. Therefore, there are 8 machine instructions
-in SystemBrainFuck that may change state other than PC. All remaining encodings
-are considered as NOPs - they only set PC = PC+1.
+in SystemBrainFuck that may change state other than PC. 
+
+The symbol \0 is treated as a marker for end of program. It puts processor into 
+Halt mode without updating PC or any other state.
+Instructions in memory following \0 are considered as non-existing: they had 
+never been executed before and will not be executed after \0.
+Having SK !=0 when encountering \0 is not considered as a violation or error,
+though it should not happen with well-formed programs (as it corresponds to
+having unmatched "[").
+
+All remaining encodings are considered as NOPs - they set PC = PC+1.
 
 If a processor is in a skipping mode ( SK != 0), then all instructions 
-except "[" and "]" are treated as NOPs.
-
+except "[", "]" and \0 are treated as NOPs.
 
 For 8 brainfuck commands, their encodings match their ASCII codes.
 
@@ -178,15 +186,21 @@ make this configurable by a register).
 are accepted, all others are ignored (TODO make this configurable).
 
 [   Jump past the matching ] if the cell under the pointer is 0.
-if SK > 0, then SK = SK + 1;
-else If Tape[TP] != 0, 
-then enter skipping mode: SK = 1,
-else Stack[SP] = PC; SP = SP +1;
+if SK > 0, 
+    then SK = SK + 1;
+else if Tape[TP] != 0, 
+then 
+    enter skipping mode: SK = 1,
+else 
+    On stack overflow, signal violation
+    Stack[SP] = PC; SP = SP +1;
 
 ]   Jump back to the matching [ if the cell under the pointer is nonzero.
 if SK > 0, then SK = SK - 1 
 else if Tape[TP] != 0;
-then PC = Stack[SP]; SP = SP -1;
+then 
+    If SP < 0
+    PC = Stack[SP]; SP = SP -1;
 
 Returning from the Supervisor Mode
 
