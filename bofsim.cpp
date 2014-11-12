@@ -28,6 +28,28 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "bofsim.h"
 #include "memory.h"
 
+void BfCpu::ProcessViolation(uint8_t opc, uint8_t tap) {
+    if (sr.mode != ApplicationMode) {
+        info(2, "Violation in non-application mode, going to Halt");
+        sr.mode = HaltMode;
+        return;
+    }
+    inactive_pc = pc;
+    pc = 0;
+    inactive_sp = sp;
+    sp = 0;
+    inactive_sk = sk;
+    sk = 0;
+    sr.opcode = opc;
+    sr.tape = tap;
+    sr.mode = SupervisorMode;
+}
+
+void BfCpu::ReturnToApplicationMode() {
+    info(1, "ReturnToApplicationMode not implemented");
+    
+}
+
 steps_cycles_t BfCpu::Execute(cycle_t max_cycles) {
     cycle_t i = 0;
     for (i = 0; i < max_cycles; i++)
@@ -36,6 +58,14 @@ steps_cycles_t BfCpu::Execute(cycle_t max_cycles) {
 }
 
 steps_cycles_t BfCpu::ExecuteOneStep() {
+    
+    enum class ExecuteResult {
+        Regular = 0,
+        ControlFlow,
+        Violation,
+        Nop,
+        Halt,
+    };
     
     if (sr.mode == HaltMode) {// processor is disabled
         info(4, "CPU is disabled");
@@ -52,23 +82,66 @@ steps_cycles_t BfCpu::ExecuteOneStep() {
         opcode = dynamic_cast<MemoryIface&>(scode).Read(pc);
         break;
     default:
-        error("Unsupported processor mode");
+        error("Unsupported processor mode for execution");
         break;
     }
+    info(4, std::string("Opcode read ") + std::string(1, opcode));
         
     
     /* Decode and Execute */
-    info(4, std::string("Opcode read ") + std::string(1, opcode));
+    ExecuteResult res = ExecuteResult::Regular;
+    cycle_t spent = 1; // default value for executing instructions.
+    
     switch (opcode) {
     case '\0':
+        sr.mode = HaltMode;
+        res = ExecuteResult::Halt;
+        break;
+    case '>':
+        res = ExecuteResult::Regular;
+        break;
+    case '<':
+        res = ExecuteResult::Regular;
+        break;
+    case '+':
+        res = ExecuteResult::Regular;
+        break;
+    case '-':
+        break;
+        res = ExecuteResult::Regular;
+    case '[':
+        res = ExecuteResult::ControlFlow;
+        break;
+    case ']':
+        res = ExecuteResult::ControlFlow;
+        break;
+    case '.':
+        res = ExecuteResult::Regular;
+        break;
+    case ',':
+        res = ExecuteResult::Regular;
         break;
     default:
+        res = ExecuteResult::Nop;
+        spent = 0; // Not cycles are spent processing comments
         break;
     }
-    pc +=1;
     
-    /* Advance PC */
+    /* Advance PC depending on instruction outcome */
     
-    return {1,1};
+    switch(res) {
+    case ExecuteResult::Regular:
+    case ExecuteResult::Nop:
+        pc +=1;
+    case ExecuteResult::ControlFlow:
+    case ExecuteResult::Violation:
+    case ExecuteResult::Halt:
+        // PC is already changed correctly.
+        break;
+    default:
+        pc +=1;
+        break;
+    }
+    return {1, spent};
 } // ExecuteOneStep
     

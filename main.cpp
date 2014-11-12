@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
                    {"tw", 8},
                    {"nm", 3},
                    {"sd", 16},
-                   {"il", 1024}
+                   {"il", 4096}
     };
     
     /* Add Objects */

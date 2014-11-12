@@ -78,6 +78,7 @@ class BfCpu: public SimObject {
     status_register_t sr;
     
     my_uint128_t sk;
+    my_uint128_t inactive_sk;
     
     /* Configuration state */
     int tl; // tape length
@@ -107,7 +108,8 @@ public:
     sp(0),
     inactive_sp(0),
     sr(0),
-    sk(0)
+    sk(0),
+    inactive_sk(0)
     {
         tl = cfg.Get("tl");
         if ((tl < 10 || tl > 127) && tl != 9999)
@@ -140,7 +142,10 @@ public:
     /* IN: maximum steps to do 
        RETURN: [steps, cycles] actually done */
     steps_cycles_t Execute(step_t max_steps);
-    
+
+    void ProcessViolation(uint8_t opc, uint8_t tap);
+    void ReturnToApplicationMode();
+
 }; //BfCpu
 
 #endif // BOFSIM_H_

@@ -50,7 +50,7 @@ the processor transitions from application mode directly to halt mode.
 Register Set
 
 * PC - program counter, 128 bit wide unsigned. Unaccessible from application mode. 
-In supervisor mode, the application's PC is constant, mapped to address 1000, 
+In supervisor mode, the application's PC is preserved, mapped to address 1000, 
 while an new, active PC is also 128 bit and is not accessible by application.
 
 * SR - status register, 64 bit wide, unreadable from application mode, in supervisor
@@ -135,12 +135,12 @@ See TP description for details.
 
 Instruction Memory
 
-Memory space for commands is separated from tape memory. More to it, application
-mode instruction memory is not accessible from supervisor mode, and vice versa.
-Current memory space is indicated by processor mode in SR register.
-All instructions are 8 bits wide.
-If PC reaches end of current memory space, a violation is signalled. If PC is 
-attempted to be changed to a value below zero, a violation is signalled.
+Memory space for commands is separated from tape memory. Application mode 
+instruction memory is not accessible from supervisor mode, and vice versa.
+Current memory space is indicated by processor mode field in the SR register.
+If PC passes the end of current instruction memory space in any mode, it 
+transitions to halt mode (see description of \0 below). If PC is attempted to be 
+changed to a value below zero, a violation is signalled.
 
 Instructions
 
@@ -202,10 +202,33 @@ then
     If SP < 0
     PC = Stack[SP]; SP = SP -1;
 
+Entering a Supervisor Mode
+
+if NM=3, processor has enabled supervisor mode. To enter it from application mode
+code has to perform any type of violation. 
+The following actions are performed:
+Saved PC <- PC
+PC <- 0
+Saved SP <- SP
+SP <- 0
+Saved SK <- SK
+SK = 0
+TP is preserved
+Update SR fields opcode, tape and mode.
+Switch instruction memory space.
+    
 Returning from the Supervisor Mode
 
-Run "]" with supervisor SP = 0. This switches PC, SP, changes SR and puts 
-the processor into application mode.
+Run "]" in supervisor mode with SP = 0. This loads PC, SP, SK with saved values, 
+changes SR and puts the processor into application mode.
+The following actions are performed:
+PC <- Saved PC 
+SP <- Saved SP
+SK <- Saved SK
+TP is preserved
+Update SR field mode.
+Switch instruction memory space.
+
 
 State after Reset
 
