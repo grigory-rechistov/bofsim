@@ -27,6 +27,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "bofsim.h"
 #include "memory.h"
+#include "iodev.h"
 
 void BfCpu::ProcessViolation(uint8_t opc, uint8_t tap) {
     if (sr.mode != ApplicationMode) {
@@ -48,6 +49,7 @@ void BfCpu::ProcessViolation(uint8_t opc, uint8_t tap) {
 void BfCpu::ReturnToApplicationMode() {
     info(1, "ReturnToApplicationMode not implemented");
     
+    
 }
 
 steps_cycles_t BfCpu::Execute(cycle_t max_cycles) {
@@ -59,10 +61,14 @@ steps_cycles_t BfCpu::Execute(cycle_t max_cycles) {
 
 steps_cycles_t BfCpu::ExecuteOneStep() {
     
+    /* Instruction execution result 
+     * Currently affects whether PC will be advanced.
+     */
     enum class ExecuteResult {
         Regular = 0,
         ControlFlow,
         Violation,
+        Skipping,
         Nop,
         Halt,
     };
@@ -73,6 +79,7 @@ steps_cycles_t BfCpu::ExecuteOneStep() {
     }
     
     char opcode{0};
+    my_uint128_t tape_val{0};
     /* Fetch */
     switch (sr.mode) {
     case ApplicationMode:
@@ -87,59 +94,129 @@ steps_cycles_t BfCpu::ExecuteOneStep() {
     }
     info(4, std::string("Opcode read ") + std::string(1, opcode));
         
-    
     /* Decode and Execute */
     ExecuteResult res = ExecuteResult::Regular;
     cycle_t spent = 1; // default value for executing instructions.
     
-    switch (opcode) {
+    if ((sk > 0) and (opcode != '[' and
+                      opcode != ']' and
+                      opcode != '\0')
+    ) {
+        info(4, "Skipping...");
+        res = ExecuteResult::Skipping;
+    } else switch (opcode) {
     case '\0':
         sr.mode = HaltMode;
         res = ExecuteResult::Halt;
         break;
     case '>':
-        res = ExecuteResult::Regular;
+        if (tp >= tl) {
+            uint8_t tape8 = (uint8_t)dynamic_cast<MemoryIface&>(tape).Read(tp);
+            ProcessViolation(opcode, tape8);
+            res = ExecuteResult::Violation;
+        } else {
+            tp++;
+            res = ExecuteResult::Regular;
+        }
         break;
     case '<':
-        res = ExecuteResult::Regular;
+        if (tp == 0 ) {
+            uint8_t tape8 = (uint8_t)dynamic_cast<MemoryIface&>(tape).Read(tp);
+            ProcessViolation(opcode, tape8);
+            res = ExecuteResult::Violation;
+        } else {
+            tp--;
+            res = ExecuteResult::Regular;
+        }
         break;
     case '+':
+        tape_val = dynamic_cast<MemoryIface&>(tape).Read(tp);
+        tape_val = (tape_val+1) & tape_mask; // increase and handle overflow
+        dynamic_cast<MemoryIface&>(tape).Write(tp, tape_val);
         res = ExecuteResult::Regular;
         break;
     case '-':
-        break;
+        tape_val = dynamic_cast<MemoryIface&>(tape).Read(tp);
+        tape_val = (tape_val-1) & tape_mask; // increase and handle overflow
+        dynamic_cast<MemoryIface&>(tape).Write(tp, tape_val);
         res = ExecuteResult::Regular;
+        break;
     case '[':
-        res = ExecuteResult::ControlFlow;
+        tape_val = dynamic_cast<MemoryIface&>(tape).Read(tp);
+        if (sk > 0) {
+            sk++;
+            res = ExecuteResult::Skipping;
+        } else if (tape_val == 0) {
+            info(2, std::string("Entering skipping mode at PC = ") + std::to_string(pc));
+            sk = 1;
+            res = ExecuteResult::Skipping;
+        } else {
+            if (sp > sd) {
+                ProcessViolation(opcode, (uint8_t)tape_val);
+                res = ExecuteResult::Violation;
+            } else {
+                info(2, std::string("Entering loop at PC = ") + std::to_string(pc));
+                call_stack[sp] = pc;
+                sp ++;
+                res = ExecuteResult::Regular;
+            }
+        }
         break;
     case ']':
-        res = ExecuteResult::ControlFlow;
+        tape_val = dynamic_cast<MemoryIface&>(tape).Read(tp);
+        if (sk == 0) {
+            if (sp == 0) {
+                    ProcessViolation(opcode, (uint8_t)tape_val);
+                    res = ExecuteResult::Violation;
+            } else {
+                sp--;
+                if (tape_val != 0) {
+                    pc = call_stack[sp];
+                    info(2, std::string("Loop to PC = ") + std::to_string(pc));
+                    res = ExecuteResult::ControlFlow;
+                } else {
+                    info (2, std::string("Exiting loop at PC = ") + std::to_string(pc));
+                    res = ExecuteResult::Regular;
+                }
+            }
+        } else {
+            sk--;
+            if (sk == 0) {
+                info(2, "Leaving skipping mode");
+                res = ExecuteResult::Regular;
+            } else {
+                res = ExecuteResult::Skipping;
+            }
+        }
         break;
-    case '.':
+    case '.': // output
+        tape_val = dynamic_cast<MemoryIface&>(tape).Read(tp);
+        dynamic_cast<IOIface&>(iodev).Write(tape_val);
         res = ExecuteResult::Regular;
         break;
-    case ',':
+    case ',': // input
+        tape_val = dynamic_cast<IOIface&>(iodev).Read();
         res = ExecuteResult::Regular;
         break;
     default:
         res = ExecuteResult::Nop;
-        spent = 0; // Not cycles are spent processing comments
+        spent = 0; // No cycles are spent processing comments
         break;
-    }
+    } // switch (opcode)
     
     /* Advance PC depending on instruction outcome */
-    
     switch(res) {
     case ExecuteResult::Regular:
     case ExecuteResult::Nop:
+    case ExecuteResult::Skipping:
         pc +=1;
     case ExecuteResult::ControlFlow:
     case ExecuteResult::Violation:
     case ExecuteResult::Halt:
-        // PC is already changed correctly.
+        // PC is already changed.
         break;
     default:
-        pc +=1;
+        assert(0 && "Unreachable");
         break;
     }
     return {1, spent};

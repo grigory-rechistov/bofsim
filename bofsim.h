@@ -31,6 +31,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <exception>
 #include <string>
+#include <cassert>
 
 #include "inttypes.h"
 #include "object.h"
@@ -81,8 +82,9 @@ class BfCpu: public SimObject {
     my_uint128_t inactive_sk;
     
     /* Configuration state */
-    int tl; // tape length
+    unsigned tl; // tape length
     int tw; // tape width
+    my_uint128_t tape_mask; // pre-calculated maximum value for tape cell
     int nm; // number of processor modes;
     my_uint128_t sd; // stack depth
     my_uint128_t il; // instruction memory capacity
@@ -119,6 +121,8 @@ public:
         tw = cfg.Get("tw");
         if (tw < 8 || tw > 128 || (tw & 0x7))
             error("Bad TW value in configuration");
+        tape_mask = (my_uint128_t(1) << tw) - 1;
+        assert(tape_mask != 0);
         nm = cfg.Get("nm");
         if (nm != 2 && nm != 3)
             error("Bad NM value in configuration");
