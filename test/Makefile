@@ -12,7 +12,9 @@ endif
 
 ENABLED_TESTS = \
         test-io$(SUFF) \
-        test-mem$(SUFF)
+        test-mem$(SUFF) \
+        test-cpu-right$(SUFF)
+
 
 #
 
@@ -26,7 +28,7 @@ all: $(ENABLED_TESTS)
 
 *.cpp: ../*.h expect.h
 
-test-%$(SUFF): test-%.cpp
+test-%$(SUFF): test-%.cpp ../bofsim.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 

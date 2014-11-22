@@ -49,7 +49,7 @@ struct status_register_t {
     uint8_t tape;
     processor_mode_t mode;
     
-    uint64_t val() {
+    uint64_t val() const {
         return ((uint64_t)opcode <<  0) |
                ((uint64_t)tape   <<  8) |
                ((uint64_t)mode   << 16);
@@ -150,6 +150,18 @@ public:
     void ProcessViolation(uint8_t opc, uint8_t tap);
     void ReturnToApplicationMode();
 
+    virtual Configuration GetRegs() const {
+        
+        Configuration regs;
+        regs.cfg = {
+            {"pc", pc},
+            {"tp", tp},
+            {"sp", sp},
+            {"sk", sk},
+            {"sr", sr.val()}
+        };
+        return regs;
+    };
 }; //BfCpu
 
 #endif // BOFSIM_H_

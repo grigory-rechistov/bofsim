@@ -28,6 +28,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OBJECT_H_
 
 #include "log.h"
+#include "config.h"
 
 class SimObject: public Log {
 private:
@@ -38,6 +39,7 @@ public:
         info(4, std::string("Creating object ") + name );
     };
     
+    virtual Configuration GetRegs() const {return Configuration();};
     virtual ~SimObject() {}; // this makes this class virtual
     
 //     const std::string& getName() {return this->name;};

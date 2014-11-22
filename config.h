@@ -37,6 +37,15 @@ public:
     std::unordered_map<std::string, my_uint128_t> cfg; // no point in hiding so far
     auto Get(const std::string &key) const {return cfg.at(key);};
     void Set(const std::string &key, my_uint128_t val){cfg[key] = val; };
+    std::string Dump() const {
+        std::string result("");
+        for(auto it = cfg.begin(); it != cfg.end(); it++) {
+            result.append(std::string(it->first) + std::string("->") +
+                          std::to_string(it->second) + std::string("\n")
+            );
+        }
+        return result;
+    };
 };
 
 #endif // CONFIG_H_

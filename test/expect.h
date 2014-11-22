@@ -27,6 +27,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXPECT_H_
 #define EXPECT_H_
 
+#include "inttypes.h"
+
 static inline void TestExpectTrue(bool condition, 
                                   const std::string descr) {
     std::exception e;

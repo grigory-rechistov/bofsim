@@ -16,3 +16,6 @@ bofsim: main.o bofsim.o memory.o
 
 test:
 	$(MAKE) -C test run
+
+clean-test:
+	$(MAKE) -C test clean
