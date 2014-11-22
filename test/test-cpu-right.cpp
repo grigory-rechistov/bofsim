@@ -35,15 +35,15 @@ int main() {
     buf.assign(BUFSIZE,'>');
     acodeInstr.LoadRaw(buf.data(), BUFSIZE);
     
-    Configuration cpuregs;
+   Configuration cpuregs;
     /* Do simulation */
-    cpuregs = cpu.GetRegs();
-    std::cout << cpuregs.Dump();
-    cpu.ExecuteOneStep();
-    std::cout << "After\n";
-    std::cout << cpuregs.Dump();
     
-//     TestExpectEqual(0xff, val, "Write(0, 0xff), Read(0) -> 0xff");
+    std::cout << "Before:\n" << cpu.GetRegs().Dump();
+    cpu.ExecuteOneStep();
+    std::cout << "After:\n" << cpu.GetRegs().Dump();
+    cpuregs = cpu.GetRegs();
+    
+    TestExpectEqual(0x1, cpuregs.cfg["tp"], "TP is 1");
 
     return 0;
 }
