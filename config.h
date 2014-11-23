@@ -35,6 +35,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class Configuration {
 public:
     std::unordered_map<std::string, my_uint128_t> cfg; // no point in hiding so far
+    
     auto Get(const std::string &key) const {return cfg.at(key);};
     void Set(const std::string &key, my_uint128_t val){cfg[key] = val; };
     std::string Dump() const {
@@ -46,6 +47,9 @@ public:
         }
         return result;
     };
+    
+    Configuration() : cfg() {};
+    Configuration(std::unordered_map<std::string, my_uint128_t> _cfg): cfg(_cfg) {};
 };
 
 #endif // CONFIG_H_

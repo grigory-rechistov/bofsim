@@ -35,6 +35,7 @@ void BfCpu::ProcessViolation(uint8_t opc, uint8_t tap) {
         sr.mode = HaltMode;
         return;
     }
+    info(4, "Violation in application mode, switching to supervisor");
     inactive_pc = pc;
     pc = 0;
     inactive_sp = sp;
@@ -110,7 +111,7 @@ steps_cycles_t BfCpu::ExecuteOneStep() {
         res = ExecuteResult::Halt;
         break;
     case '>':
-        if (tp >= tl) {
+        if (tp >= tl-1) {
             uint8_t tape8 = (uint8_t)dynamic_cast<MemoryIface&>(tape).Read(tp);
             ProcessViolation(opcode, tape8);
             res = ExecuteResult::Violation;
@@ -204,7 +205,7 @@ steps_cycles_t BfCpu::ExecuteOneStep() {
         break;
     } // switch (opcode)
     
-    /* Advance PC depending on instruction outcome */
+    /* Advance PC depending on execution outcome */
     switch(res) {
     case ExecuteResult::Regular:
     case ExecuteResult::Nop:
@@ -222,3 +223,16 @@ steps_cycles_t BfCpu::ExecuteOneStep() {
     return {1, spent};
 } // ExecuteOneStep
     
+void BfCpu::SetRegister(const std::string &name, const my_uint128_t &val) {
+    /* TODO add validation for val */
+    if (!name.compare("pc")) {
+        pc = val;
+    } else if (!name.compare("tp")) {
+        tp = val;
+    } else {
+        error(std::string("Unknown or unsupported register ") + name);
+//         throw Exception
+    }
+    
+}
+

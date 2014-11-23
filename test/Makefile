@@ -13,7 +13,8 @@ endif
 ENABLED_TESTS = \
         test-io$(SUFF) \
         test-mem$(SUFF) \
-        test-cpu-right$(SUFF)
+        test-cpu-right-01$(SUFF) \
+        test-cpu-right-02$(SUFF) \
 
 
 #

@@ -27,6 +27,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OBJECT_H_
 #define OBJECT_H_
 
+#include <string>
+
 #include "log.h"
 #include "config.h"
 
@@ -39,10 +41,18 @@ public:
         info(4, std::string("Creating object ") + name );
     };
     
-    virtual Configuration GetRegs() const {return Configuration();};
     virtual ~SimObject() {}; // this makes this class virtual
     
 //     const std::string& getName() {return this->name;};
+    
+};
+
+class RegisterAccessIface {
+
+public:
+    virtual Configuration GetRegs() const = 0;
+    virtual void SetRegister(const std::string &name, 
+                             const my_uint128_t &val) = 0;
     
 };
 

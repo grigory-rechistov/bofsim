@@ -62,7 +62,7 @@ struct status_register_t {
         mode( processor_mode_t((value >> 16) & 0xff)) {};
 };
 
-class BfCpu: public SimObject {
+class BfCpu: public SimObject, public RegisterAccessIface {
     
     SimObject &tape;
     SimObject &acode;
@@ -150,8 +150,8 @@ public:
     void ProcessViolation(uint8_t opc, uint8_t tap);
     void ReturnToApplicationMode();
 
+    /* RegisterAccessIface implementation */
     virtual Configuration GetRegs() const {
-        
         Configuration regs;
         regs.cfg = {
             {"pc", pc},
@@ -162,6 +162,8 @@ public:
         };
         return regs;
     };
+    
+    virtual void SetRegister(const std::string &name, const my_uint128_t &val);
 }; //BfCpu
 
 #endif // BOFSIM_H_
