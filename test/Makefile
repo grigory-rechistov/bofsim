@@ -16,6 +16,7 @@ ENABLED_TESTS = \
         test-cpu-right-01$(SUFF) \
         test-cpu-right-02$(SUFF) \
         test-cpu-left-01$(SUFF) \
+        test-cpu-left-02$(SUFF) \
 
 
 #
